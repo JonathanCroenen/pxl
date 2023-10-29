@@ -1,4 +1,4 @@
-# PIXEL WINDOW
+# PXL
 Little windowing library that uses OpenGL through GLFW to create a window, handle input and allows the user to render an image by writing to the screen pixel buffer
 
 ## Dependencies
