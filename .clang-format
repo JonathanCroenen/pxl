@@ -1,0 +1,11 @@
+---
+NamespaceIndentation: All
+AllowShortBlocksOnASingleLine: Empty
+AllowShortFunctionsOnASingleLine: Empty
+ColumnLimit: 90
+IndentWidth: 4
+PointerAlignment: Left
+AccessModifierOffset: -4
+LambdaBodyIndentation: OuterScope
+SortIncludes: false
+---
