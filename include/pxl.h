@@ -149,14 +149,6 @@ namespace Pxl {
         }
     } // namespace
 
-    struct Color {
-        float r, g, b;
-
-        Color() : r(0), g(0), b(0) {}
-        Color(float r, float g, float b) : r(r), g(g), b(b) {}
-        Color(float x) : r(x), g(x), b(x) {}
-    };
-
     class Window {
     public:
         int _width, _height;
@@ -165,17 +157,7 @@ namespace Pxl {
         ~Window();
 
         void Run();
-        inline Color GetPixel(uint32_t x, uint32_t y) const {
-            return _pixels[y * _width + x];
-        }
-        inline void SetPixel(uint32_t x, uint32_t y, float r, float g, float b) {
-            _pixels[y * _width + x].r = r;
-            _pixels[3 * _width + x].g = g;
-            _pixels[3 * _width + x].b = b;
-        }
-        inline void SetPixel(uint32_t x, uint32_t y, Color color) {
-            _pixels[y * _width + x] = color;
-        }
+        void Blit(float* pixels, int width, int height);
 
         virtual void OnStart() = 0;
         virtual void OnUpdate(float delta) = 0;
@@ -201,15 +183,11 @@ namespace Pxl {
         uint32_t _texture;
         uint32_t _shader;
 
-        std::vector<Color> _pixels;
-
         float _last_time;
     };
 
     inline Window::Window(int width, int height, const char* title, bool vsync)
         : _width(width), _height(height), _title(title) {
-
-        _pixels = std::vector<Color>(width * height);
 
         CreateContext(vsync);
         SetupCallbacks();
@@ -247,12 +225,15 @@ namespace Pxl {
             OnUpdate(current_time - _last_time);
             _last_time = current_time;
 
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, _width, _height, 0, GL_RGB, GL_FLOAT,
-                         _pixels.data());
             glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
             glfwSwapBuffers(_window);
         }
+    }
+
+    inline void Window::Blit(float* pixels, int width, int height) {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_FLOAT,
+                     &pixels[0]);
     }
 
     inline void Window::KeyCallback(int key, int, int action, int) {
@@ -271,8 +252,7 @@ namespace Pxl {
         glfwSetErrorCallback(Window::ErrorCallback);
 
         if (!glfwInit()) {
-            std::cerr << "failed to initialize glfw" << std::endl;
-            // throw std::runtime_error("failed to initialize glfw");
+            throw std::runtime_error("failed to initialize glfw");
         }
 
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
@@ -337,8 +317,6 @@ namespace Pxl {
             app->_height = height;
             glViewport(0, 0, width, height);
 
-            app->_pixels.resize(width * height);
-
             app->ResizeCallback(width, height);
         });
     }
@@ -394,10 +372,6 @@ namespace Pxl {
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-        // upload texture
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, _width, _height, 0, GL_RGB, GL_FLOAT,
-                     _pixels.data());
 
         // unbind
         glBindTexture(GL_TEXTURE_2D, 0);
